@@ -1,0 +1,15 @@
+User:
+  name: L67
+RP:
+   name: STEMlab 125-14 v1.0
+   IP: rp-f04df7.local
+Scan:
+  DF: 16 #potencias de 2 solamente
+  T_source: CH2_PE
+  T_level: 0.5 #en volts
+  T_delay: 0   #en ns multiplos de 8, en otro caso redondea al múltiplo de 8 más cercano
+  M_source: SOUR1
+  N_sample: 700
+Saving:
+  filename: data.csv
+  folder: C:\Users\Laboratorio\Documents\L67\Proyect\Data
