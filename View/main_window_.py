@@ -37,10 +37,16 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_plot)
         
-        self.comboBox.addItem('CH2_PE')
-        self.comboBox.addItem('CH2_NE')
         self.comboBox.addItem('CH1_PE')
         self.comboBox.addItem('CH1_NE')
+        self.comboBox.addItem('CH2_PE')
+        self.comboBox.addItem('CH2_NE')
+        self.comboBox.addItem('EXT_PE')
+        self.comboBox.addItem('EXT_NE')
+        self.comboBox.addItem('AWG_PE')
+        self.comboBox.addItem('AWG_NE')
+        self.comboBox.addItem('NOW')
+        self.comboBox.addItem('DISABLED')
         
         self.DF_spinBox.setValue(int(np.log2(self.experiment.config['Scan']['DF'])))
         self.delay_lineEdit.setText(str(self.experiment.config['Scan']['T_delay']))
@@ -64,7 +70,11 @@ class MainWindow(QMainWindow):
         self.experiment.config['Scan']['DF']=int(2**(self.DF_spinBox.value()))
         self.experiment.config['Scan']['T_delay']=int(self.delay_lineEdit.text())
         self.experiment.config['Scan']['T_source']=self.comboBox.currentText()
+        if self.experiment.config['Scan']['N_sample']>8192:
+            raise Exception('Número de puntos mayor a 8192')
         self.experiment.config['Scan']['N_sample']=int(self.N_lineEdit.text())
+        if self.experiment.config['Scan']['T_level']>1.0:
+            raise Exception('Nivel del trigger mayor a 1V')
         self.experiment.config['Scan']['T_level']=float(self.T_level_lineEdit.text())
         
     def save_screen(self):
