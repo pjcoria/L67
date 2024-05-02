@@ -7,10 +7,8 @@ Created on Thu Apr 18 10:39:55 2024
 
 import numpy as np
 import threading
-import time
 import os
 import yaml
-import threading
 from Model.RP import RP
 from datetime import datetime
 
@@ -19,20 +17,61 @@ from datetime import datetime
 class Experiment:
     def __init__(self, config_file):
         self.config_file = config_file
-        self.scan_data=[[0],[0]]
+        self.scan_data = [[0],[0]]
         self.is_running = False
+        self.config_loaded = False
+        self.RP_loaded = False
         
     def load_config(self):
         with open(self.config_file, 'r') as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
+            
+        if self.config['RP']['IP'] is None:
+            raise Exception('IP no ingresada')
+        if self.config['Scan']['DF'] is None:
+            raise Exception('Decimation factor no ingresado')
+        if self.config['Scan']['T_source'] is None:
+            raise Exception('Fuente del trigger no ingresada')
+        if self.config['Scan']['T_level'] is None:
+            raise Exception('Nivel del trigger no ingresado')
+        if self.config['Scan']['T_delay'] is None:
+            raise Exception('Delay del trigger no ingresado')
+        if self.config['Scan']['M_source'] is None:
+            raise Exception('Canal de medición no ingresado')
+        if self.config['Scan']['N_sample'] is None:
+            raise Exception('Número de puntos no ingresado')
+        if self.config['Saving']['filename'] is None:
+            raise Exception('Nombre del archivo de guardado no ingresado')
+        if self.config['Saving']['folder'] is None:
+            raise Exception('Carpeta de destino de los datos guardados no ingresada')
+        if not np.log2(self.config['Scan']['DF']).is_integer():
+            raise Exception('El decimation factor elegido no es potencia de 2')
+        if self.config['Scan']['DF']>65536:
+            raise Exception('El decimation factor elegido es mayor a 65536')
+        if self.config['Scan']['T_level']>1.0:
+            raise Exception('El nivel del trigger debe ser menor a 1V')
+        if not  any(x in self.config['Scan']['T_source'] for x in ['DISABLED', 'NOW', 'CH1_PE', 'CH1_NE', 'CH2_PE', 'CH2_NE', 'EXT_PE', 'EXT_NE', 'AWG_PE', 'AWG_NE']) :
+            raise Exception('Fuente del trigger no válida')
+        if not  any(x in self.config['Scan']['M_source'] for x in ['SOUR1', 'SOUR2']) :
+            raise Exception('Canal de adquisición no válido')
+        if self.config['Scan']['N_sample']>8192:
+            raise Exception('Número de puntos mayor a 8192')
+        
+        self.config_loaded = True
     
     def load_RP(self):
-        self.RP = RP(self.config['RP']['IP'])
-    
+        if self.config_loaded:
+            self.RP = RP(self.config['RP']['IP'])
+            self.RP_loaded = True
+        else:
+            raise Exception('Archivo de configuración no cargado')
+            
     def do_scan(self):
         if self.is_running:
             #print('Scan already running')
             return
+        if not self.RP_loaded:
+            raise Exception('Red Pitaya no cargada')
         self.keep_running = True
         self.is_running = True
         self.RP.set_DF(self.config['Scan']['DF'])
